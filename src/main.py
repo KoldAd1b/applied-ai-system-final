@@ -1,33 +1,54 @@
-"""
-Command line runner for the Music Recommender Simulation.
+"""Command line runner for the Music Recommender Simulation."""
 
-This file helps you quickly run and test your recommender.
+from .recommender import load_songs, recommend_songs
 
-You will implement the functions in recommender.py:
-- load_songs
-- score_song
-- recommend_songs
-"""
 
-from recommender import load_songs, recommend_songs
+PROFILES = {
+    "High-Energy Pop": {
+        "genre": "pop",
+        "mood": "happy",
+        "energy": 0.85,
+        "danceability": 0.85,
+        "likes_acoustic": False,
+    },
+    "Chill Acoustic Focus": {
+        "genre": "lofi",
+        "mood": "chill",
+        "energy": 0.35,
+        "valence": 0.60,
+        "likes_acoustic": True,
+    },
+    "Deep Intense Rock": {
+        "genre": "rock",
+        "mood": "intense",
+        "energy": 0.92,
+        "likes_acoustic": False,
+    },
+}
+
+SCORING_MODES = ("balanced", "genre_first", "mood_first")
 
 
 def main() -> None:
-    songs = load_songs("data/songs.csv") 
+    songs = load_songs("data/songs.csv")
+    print(f"Loaded songs: {len(songs)}")
 
-    # Starter example profile
-    user_prefs = {"genre": "pop", "mood": "happy", "energy": 0.8}
+    for profile_name, user_prefs in PROFILES.items():
+        print(f"\n{'=' * 72}")
+        print(f"Profile: {profile_name}")
 
-    recommendations = recommend_songs(user_prefs, songs, k=5)
+        for mode in SCORING_MODES:
+            recommendations = recommend_songs(user_prefs, songs, k=5, mode=mode)
 
-    print("\nTop recommendations:\n")
-    for rec in recommendations:
-        # You decide the structure of each returned item.
-        # A common pattern is: (song, score, explanation)
-        song, score, explanation = rec
-        print(f"{song['title']} - Score: {score:.2f}")
-        print(f"Because: {explanation}")
-        print()
+            print(f"\nMode: {mode}")
+            print("-" * 72)
+            for rank, (song, score, explanation) in enumerate(recommendations, start=1):
+                print(
+                    f"{rank}. {song['title']} by {song['artist']} "
+                    f"({song['genre']}, {song['mood']})"
+                )
+                print(f"   Score: {score:.2f}")
+                print(f"   Because: {explanation}")
 
 
 if __name__ == "__main__":

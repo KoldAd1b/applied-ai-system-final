@@ -201,11 +201,8 @@ AI collaboration helped most when brainstorming how to structure the system as a
 
 ## Demo Walkthrough
 
-Loom link: **Add your Loom video link here after recording.**
+The screenshot below captures an end-to-end walkthrough with two user inputs, grounded AI-style outputs, guardrail confidence, and the reliability harness.
 
-The video should show:
+![VibeFinder CLI demo walkthrough](assets/demo_walkthrough.png)
 
-- 2-3 end-to-end queries
-- Retrieved evidence or debug mode
-- Guardrail confidence output
-- The reliability harness with pass/fail results
+For a recorded submission, use the same commands shown in the screenshot and include the recording link in the course portal.

@@ -170,10 +170,10 @@ def infer_preferences(query: str, retrieved_contexts: Sequence[RetrievedItem]) -
             round((metadata["energy_min"] + metadata["energy_max"]) / 2, 2),
         )
         tags = _tokens(metadata.get("tags", ""))
-        for genre in GENRE_TERMS:
+        for genre in sorted(GENRE_TERMS):
             if genre in tags and "genre" not in prefs:
                 prefs["genre"] = genre
-        for mood in MOOD_TERMS:
+        for mood in sorted(MOOD_TERMS):
             if mood in tags and "mood" not in prefs:
                 prefs["mood"] = mood
 

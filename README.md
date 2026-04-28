@@ -199,10 +199,4 @@ This project taught me that a useful AI system is more than a model call. The im
 
 AI collaboration helped most when brainstorming how to structure the system as a RAG pipeline around the original recommender. A flawed suggestion was to rely too much on generated text as proof of quality; the better solution was to add concrete tests and an evaluation harness that can fail when behavior is wrong.
 
-## Demo Walkthrough
 
-The screenshot below captures an end-to-end walkthrough with two user inputs, grounded AI-style outputs, guardrail confidence, and the reliability harness.
-
-![VibeFinder CLI demo walkthrough](assets/demo_walkthrough.png)
-
-For a recorded submission, use the same commands shown in the screenshot and include the recording link in the course portal.

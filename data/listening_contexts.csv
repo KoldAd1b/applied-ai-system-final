@@ -1,0 +1,6 @@
+id,name,description,tags,energy_min,energy_max,notes
+1,Workout sprint,"Fast, direct songs for exercise, momentum, and high focus movement.","workout,energy,pop,edm,rock,intense",0.80,1.00,"Prioritize high energy and danceability. Avoid very acoustic tracks unless the user asks for them."
+2,Deep study,"Low-distraction music for coding, reading, homework, and concentration.","study,focus,coding,lofi,ambient,chill",0.20,0.55,"Favor calmer moods, moderate tempo, and acoustic or ambient textures."
+3,Commute reset,"Steady songs for driving, public transit, or walking between tasks.","commute,drive,balanced,synthwave,indie",0.45,0.80,"Balance energy with mood fit so the result is not too sleepy or too intense."
+4,Calm evening,"Gentle songs for winding down, journaling, or recovering from a busy day.","sleep,relax,evening,folk,classical,jazz",0.15,0.45,"Favor peaceful, warm, relaxed, and acoustic songs."
+5,Confidence boost,"Songs that feel bold, upbeat, and socially energizing.","confidence,party,happy,hip hop,pop,edm",0.70,1.00,"Favor high valence, high danceability, and confident or euphoric moods."

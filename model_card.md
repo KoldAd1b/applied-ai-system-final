@@ -1,61 +1,86 @@
-# Model Card: Music Recommender Simulation
+# Model Card: VibeFinder Applied AI System
 
-## 1. Model Name
+## Model Name
 
-VibeFinder 1.0
+VibeFinder RAG 2.0
 
-## 2. Intended Use
+## Intended Use
 
-This system suggests songs from a small fictional catalog based on a user's preferred genre, mood, energy level, and optional taste signals. It is intended for classroom exploration of recommendation logic. It should not be used as a real music product or as a serious prediction of a person's taste.
+VibeFinder recommends fictional songs from a small CSV catalog based on natural-language user requests. It is intended as a classroom and portfolio project showing retrieval, explainable ranking, optional LLM generation, guardrails, and reliability testing.
 
-## 3. How the Model Works
+It should not be used as a production music recommender or as a serious prediction of a person's real taste.
 
-VibeFinder is a content-based recommender. It compares user preferences to song features and turns those comparisons into a score. Genre and mood matches add fixed points. Energy, valence, and danceability use closeness scoring, so songs near the user's target values score higher. Acousticness is rewarded differently depending on whether the user says they like acoustic music.
+## Base Project
 
-The system includes three scoring modes:
+The base project was **Music Recommender Simulation** from Module 3. It accepted structured taste profiles and returned ranked songs with score explanations. This final project adds natural-language input, retrieval over custom context data, optional Gemini response generation, guardrails, logging, and an evaluation script.
 
-- `balanced`: gives genre, mood, and energy all meaningful influence
-- `genre_first`: gives exact genre matches the strongest boost
-- `mood_first`: gives exact mood matches the strongest boost
+## System Behavior
 
-Every recommendation includes reasons so the score is easier to understand.
+The system follows five observable steps:
 
-## 4. Data
+1. Parse the user request into preferences.
+2. Retrieve relevant listening contexts and catalog songs.
+3. Score all songs with the original content-based recommender.
+4. Generate a grounded recommendation answer with Gemini or a deterministic fallback.
+5. Validate the response and report confidence.
 
-The catalog is stored in `data/songs.csv` and contains 18 fictional songs. The dataset includes pop, lofi, rock, ambient, jazz, synthwave, indie pop, edm, folk, r&b, hip hop, metal, reggae, classical, and country. Each song has genre, mood, energy, tempo, valence, danceability, and acousticness fields.
+## Data
 
-The data is very small and hand-made. It does not include lyrics, language, release date, listener history, popularity, artist background, or cultural context.
+The main catalog is `data/songs.csv`, which contains 18 fictional songs with genre, mood, energy, tempo, valence, danceability, and acousticness.
 
-## 5. Strengths
+The RAG knowledge base is `data/listening_contexts.csv`, which contains custom guidance for workout, study, commute, calm evening, and confidence-boost listening situations.
 
-The recommender works best when the user has clear preferences that match the catalog labels. For example, a high-energy pop profile correctly pushes upbeat pop songs toward the top. A chill acoustic profile favors lofi and acoustic songs with lower energy. The explanations are also useful because users can see why a song ranked highly.
+## Strengths
 
-## 6. Limitations and Bias
+VibeFinder works best when the user request includes recognizable signals such as "workout," "study," "calm," "lofi," "pop," "acoustic," or "high energy." It is transparent because the ranked songs include score reasons, retrieved evidence can be displayed with `--debug`, and the fallback generator produces reproducible outputs.
 
-The system can over-reward exact genre and mood labels. This can create a filter bubble where users mostly see songs that look like their past preferences. It cannot learn from skips, repeated listening, playlists, social behavior, lyrics, or long-term taste changes. It may also miss good recommendations when a song has the wrong label but the right feel.
+## Limitations And Biases
 
-Because the dataset is small, some genres and moods have only one example. That means the model may treat a single fictional song as if it represents a whole genre.
+The catalog is too small to represent real music taste. Some genres and moods have only one song, which can make one fictional track stand in for an entire style. The retriever is keyword-based, so it may miss synonyms or more subtle intent. The preference parser uses hand-written rules, which means its priorities reflect the developer's assumptions.
 
-## 7. Evaluation
+The system may also create a mild filter-bubble effect by rewarding exact genre and mood matches. A real system should add diversity checks, user feedback, consent-aware personalization, and broader evaluation.
 
-I evaluated the system with three profiles: High-Energy Pop, Chill Acoustic Focus, and Deep Intense Rock. I checked whether the top results matched the profile's genre, mood, and energy target. I also compared `balanced`, `genre_first`, and `mood_first` modes to see how the rankings changed.
+## Misuse Risks And Mitigations
 
-The main surprise was how strongly a label match can affect the ranking. A mood-first setting can lift songs from different genres if they share the same mood. A genre-first setting can keep songs in the same genre near the top even when another song has similar energy.
+This version recommends fictional songs, so direct harm is limited. The larger pattern could be misused if it collected listening behavior without permission or inferred sensitive traits from music preferences.
 
-The automated tests check CSV loading, typed numeric fields, score explanations, sorted rankings, OOP recommendations, and scoring mode behavior.
+Mitigations in this project:
 
-## 8. Future Work
+- No personal listening history is stored.
+- API keys are read from environment variables, not source code.
+- Logs are ignored by Git.
+- Answers include a limitation note when using the small catalog.
+- Guardrails check that generated answers name scored recommendations.
 
-Future improvements could include:
+## Evaluation
 
-- Learning from real user behavior, such as skips, saves, and replays
-- Adding diversity-aware ranking so the top results are not too repetitive
-- Using richer tags for lyrics, era, instruments, language, and activity
-- Letting users adjust the weights directly
-- Adding feedback loops so the recommender changes over time
+The automated test suite currently passes:
 
-## 9. Personal Reflection
+```text
+12 passed
+```
 
-Building this system made recommendation algorithms feel more concrete. A ranked list is not magic. It is the result of choices about what data matters and how much each feature is worth.
+The reliability harness runs three predefined cases:
 
-The most interesting part was seeing that simple math can still produce results that feel personal. The risky part is that simple math can also hide bias. If the catalog is narrow or the weights are too strong, the system can keep showing the same kind of song instead of helping someone discover something new.
+```text
+workout_energy: PASS
+study_focus: PASS
+quiet_evening: PASS
+Summary: 3 out of 3 cases passed.
+```
+
+The most useful failure during testing was the "calm lofi music for coding" case. The parser originally treated "calm" as a low-energy evening signal before noticing the coding/study intent. The fix was to prioritize explicit study/focus words over generic calm language.
+
+## AI Collaboration Reflection
+
+AI assistance was helpful when turning the original recommender into a full applied system. The strongest suggestion was to keep the deterministic recommender as the trusted ranking core and use retrieval plus generation around it, rather than replacing the core with an opaque LLM answer.
+
+One flawed suggestion was relying on generated prose as if it proved correctness. That was not enough. The better approach was to add guardrails, unit tests, and a repeatable evaluation harness that checks expected titles and confidence scores.
+
+## Future Improvements
+
+- Add embedding-based retrieval for larger catalogs.
+- Add diversity-aware ranking to reduce repetitive results.
+- Add a small UI for interactive demos.
+- Add human evaluation forms for side-by-side recommendation quality.
+- Compare Gemini output quality against the local fallback across the same test cases.

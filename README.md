@@ -1,73 +1,50 @@
-# Music Recommender Simulation
+# VibeFinder Applied AI System
 
-## Project Summary
+VibeFinder is a retrieval-augmented AI music recommendation assistant. A user asks for music in natural language, the system retrieves relevant catalog songs and listening-context guidance, scores the songs with an explainable recommender, and then generates a grounded response with guardrails and confidence reporting.
 
-This project is a small content-based music recommender. It compares a user's taste profile to a CSV catalog of fictional songs, gives every song a score, and returns the highest-ranked matches with plain-language reasons.
+## Original Project
 
-Real platforms such as Spotify, YouTube, and TikTok use many signals at once. Collaborative filtering looks at patterns from many users, such as likes, skips, replays, follows, and playlists. Content-based filtering looks at the item itself, such as genre, mood, tempo, energy, or tags. This simulator focuses on the content-based part so the scoring logic is easy to inspect.
+This project extends my Module 3 project, **Music Recommender Simulation**. The original version was a content-based recommender that loaded a small fictional song catalog from `data/songs.csv`, scored songs against a structured user profile, and explained each ranking with genre, mood, energy, danceability, valence, and acousticness signals. It was useful for showing how recommendation weights affect results, but it did not understand natural-language requests or retrieve contextual evidence before answering.
 
-## How The System Works
+## What Changed
 
-Each song uses these features:
+The final version turns the recommender into an applied AI system with:
 
-- `genre`
-- `mood`
-- `energy`
-- `tempo_bpm`
-- `valence`
-- `danceability`
-- `acousticness`
+- **RAG retrieval** over `data/songs.csv` and `data/listening_contexts.csv`
+- **Agentic workflow steps**: parse request, retrieve evidence, score songs, generate answer, validate output
+- **Gemini integration** through `GEMINI_API_KEY`
+- **Deterministic fallback generation** so tests and demos still run without an API key
+- **Guardrails** that check whether the answer names scored recommendations and includes enough explanation
+- **Reliability harness** that runs predefined cases and prints pass/fail plus confidence
+- **Logging** to `logs/system.log`
 
-Each user profile can include:
+## Architecture
 
-- `genre`
-- `mood`
-- `energy`
-- `valence`
-- `danceability`
-- `likes_acoustic`
+![VibeFinder system architecture](assets/system_architecture.png)
 
-The recommender scores every song, sorts the results from highest to lowest score, and returns the top songs. Exact genre and mood matches add fixed points. Numeric features use closeness scoring, so a song near the user's target energy earns more than a song far away.
+The user enters a natural-language request. The parser infers preferences such as genre, mood, target energy, danceability, and acoustic preference. The retriever searches both the song catalog and a small custom listening-context knowledge base. The scoring engine ranks songs with explainable content-based logic. The generator uses Gemini when configured, otherwise it uses a deterministic local response. Guardrails validate the answer and the evaluation script tests expected behavior.
 
-```mermaid
-flowchart LR
-    User["User profile"] --> Score["Score every song"]
-    CSV["data/songs.csv catalog"] --> Score
-    Score --> Reasons["Scores and reasons"]
-    Reasons --> Rank["Sort by score"]
-    Rank --> Top["Top recommendations"]
+## Project Structure
+
+```text
+.
+├── assets/system_architecture.png
+├── data/listening_contexts.csv
+├── data/songs.csv
+├── src/ai_client.py
+├── src/evaluate.py
+├── src/main.py
+├── src/rag_system.py
+├── src/recommender.py
+├── tests/test_rag_system.py
+├── tests/test_recommender.py
+├── model_card.md
+└── requirements.txt
 ```
 
-### Algorithm Recipe
+## Setup
 
-`balanced` mode:
-
-- Genre match: `+2.0`
-- Mood match: `+1.5`
-- Energy closeness: `max(0, 1 - abs(song_energy - target_energy)) * 2.0`
-- Optional valence closeness: multiplier `1.0`
-- Optional danceability closeness: multiplier `1.0`
-- Acoustic preference: rewards high acousticness if `likes_acoustic` is true; lightly rewards low acousticness if false
-
-`genre_first` mode:
-
-- Genre match: `+3.0`
-- Mood match: `+1.0`
-- Energy closeness multiplier: `1.0`
-
-`mood_first` mode:
-
-- Genre match: `+1.0`
-- Mood match: `+3.0`
-- Energy closeness multiplier: `1.5`
-
-The different modes show how small weight changes can shift the ranked list even when the same songs and user profile are used.
-
-## Getting Started
-
-### Setup
-
-Create a virtual environment if you want an isolated install:
+Create and activate a virtual environment:
 
 ```bash
 python3 -m venv .venv
@@ -77,51 +54,158 @@ source .venv/bin/activate
 Install dependencies:
 
 ```bash
-python3 -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-Run the app:
+Optional Gemini setup:
 
 ```bash
-python3 -m src.main
+cp .env.example .env
+export GEMINI_API_KEY="your_key_here"
+```
+
+Do not commit `.env` or paste the real key into source code. The app works without Gemini by using the local fallback generator.
+
+## Run The System
+
+Run a RAG recommendation:
+
+```bash
+python -m src.main --query "Give me high energy pop songs for a workout."
+```
+
+Force reproducible local output without Gemini:
+
+```bash
+python -m src.main --query "I need calm lofi music for coding and deep study." --no-gemini --debug
+```
+
+Run the original Module 3 scoring demo:
+
+```bash
+python -m src.main --original-demo
 ```
 
 Run tests:
 
 ```bash
-python3 -m pytest -q
+python -m pytest -q
 ```
 
-## Experiments Tried
+Run the reliability harness:
 
-The CLI runs three taste profiles:
+```bash
+python -m src.evaluate
+```
 
-- High-Energy Pop: pop, happy, high energy, high danceability, low acousticness
-- Chill Acoustic Focus: lofi, chill, low energy, medium valence, high acousticness
-- Deep Intense Rock: rock, intense, high energy, low acousticness
+## Sample Interactions
 
-Representative output:
+### Example 1: Workout request
+
+Input:
 
 ```text
-Loaded songs: 18
-
-Profile: High-Energy Pop
-Mode: balanced
-1. Sunrise City by Neon Echo (pop, happy)
-   Score: 6.79
-   Because: genre match (+2.00); mood match (+1.50); energy closeness (+1.94); danceability closeness (+0.94); low-acoustic preference (+0.41)
+Give me high energy pop songs for a workout.
 ```
 
-In `genre_first` mode, exact genre matches get a stronger boost. In `mood_first` mode, songs with the same mood can move upward even if they are not the same genre. This makes the system useful for testing how recommendation weights change outcomes.
+Output summary:
 
-## Limitations and Risks
+```text
+Provider: local_fallback
+Guardrails: PASS (confidence 1.00)
 
-The catalog has only 18 songs, so the recommender cannot represent the full range of music taste. It uses hand-written weights instead of learning from real behavior. It can also create filter bubbles because exact genre and mood labels can dominate the score. A real product would need more data, diversity checks, and feedback from skips, replays, saves, and long-term listening history.
+1. Gym Hero by Max Pulse - score 5.88
+2. Sunrise City by Neon Echo - score 4.29
+3. Storm Runner by Voltline - score 3.89
+```
+
+The system retrieved the **Workout sprint** context and used it to infer high energy, pop, intense mood, and low acoustic preference.
+
+### Example 2: Study request
+
+Input:
+
+```text
+I need calm lofi music for coding and deep study.
+```
+
+Output summary:
+
+```text
+Provider: local_fallback
+Guardrails: PASS (confidence 1.00)
+
+1. Midnight Coding by LoRoom
+2. Library Rain by Paper Lanterns
+3. Focus Flow by LoRoom
+```
+
+The parser treats coding/study intent as a focus signal, so it chooses moderate-low energy rather than only using the word "calm."
+
+### Example 3: Evening request
+
+Input:
+
+```text
+Recommend gentle acoustic music for a calm evening.
+```
+
+Output summary:
+
+```text
+Provider: local_fallback
+Guardrails: PASS (confidence 1.00)
+
+1. Golden Porch by Maya Fields
+2. Spacewalk Thoughts by Orbit Bloom
+3. Library Rain by Paper Lanterns
+```
+
+The answer is grounded in the small catalog, so it includes a limitation note instead of pretending to know every possible artist or song.
+
+## Design Decisions
+
+I kept the original recommender as the ranking core because its scoring is transparent and testable. RAG is added around that core rather than replacing it, so retrieved context affects inferred preferences and answer generation while the ranking still remains explainable.
+
+Gemini is optional because a portfolio evaluator should be able to run the project without owning my API key. When `GEMINI_API_KEY` is present, Gemini receives a prompt containing only retrieved evidence and scored recommendations. When it is absent or fails, the local fallback produces the same style of grounded answer.
+
+The retrieval layer uses lightweight keyword overlap instead of embeddings. That trade-off keeps setup simple and reproducible for a small CSV-based project, but it would not scale to a large music library or ambiguous language.
+
+## Reliability And Testing Summary
+
+Automated tests cover the original recommender and the new RAG workflow:
+
+```text
+12 passed
+```
+
+The evaluation harness currently reports:
+
+```text
+Summary: 3 out of 3 cases passed.
+```
+
+What worked: workout, study, and calm evening requests returned expected catalog songs with passing guardrails. What needed adjustment: an early version treated "calm lofi music for coding" as only a relaxation request; a test caught this, and the parser now gives explicit study/coding intent higher priority.
+
+## Limitations And Ethics
+
+The dataset is fictional and very small, so the system can over-represent genres that have more examples and under-represent genres with only one song. The keyword retriever can also miss intent if the user phrases a request in a way the system does not recognize.
+
+Potential misuse is low because the app recommends fictional music, but the same pattern could become risky if used for real user profiling without consent. To reduce that risk, this project does not store personal user histories, keeps logs limited to system behavior, and explains when recommendations are based only on limited catalog evidence.
 
 ## Reflection
 
-This project showed how a simple scoring rule can still feel like a recommendation system. The results are easy to explain because each score comes with reasons, but the simplicity also exposes the limits. A song can rank highly because it matches a label, not because it would truly fit a person's taste.
+This project taught me that a useful AI system is more than a model call. The important work was connecting retrieval, deterministic logic, generation, validation, and testing into one repeatable workflow.
 
-The biggest lesson is that recommendation systems are shaped by design choices. Changing one weight can make the output feel more personal, more repetitive, or more biased. Human judgment still matters because the model only knows the features it is given.
+AI collaboration helped most when brainstorming how to structure the system as a RAG pipeline around the original recommender. A flawed suggestion was to rely too much on generated text as proof of quality; the better solution was to add concrete tests and an evaluation harness that can fail when behavior is wrong.
 
-Read the completed model card for more detail: [model_card.md](model_card.md).
+## Demo Walkthrough
+
+Loom link: **Add your Loom video link here after recording.**
+
+The video should show:
+
+- 2-3 end-to-end queries
+- Retrieved evidence or debug mode
+- Guardrail confidence output
+- The reliability harness with pass/fail results

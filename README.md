@@ -28,6 +28,7 @@ The user enters a natural-language request. The parser infers preferences such a
 
 ```text
 .
+├── app.py
 ├── assets/system_architecture.png
 ├── data/listening_contexts.csv
 ├── data/songs.csv
@@ -68,6 +69,12 @@ cp .env.example .env
 The app automatically reads `GEMINI_API_KEY` from `.env` or from your exported shell environment. Do not commit `.env` or paste the real key into source code. The app works without Gemini by using the local fallback generator.
 
 ## Run The System
+
+Run the browser UI:
+
+```bash
+streamlit run app.py
+```
 
 Run a RAG recommendation:
 
@@ -177,7 +184,7 @@ The retrieval layer uses lightweight keyword overlap instead of embeddings. That
 Automated tests cover the original recommender and the new RAG workflow:
 
 ```text
-12 passed
+14 passed
 ```
 
 The evaluation harness currently reports:
@@ -199,5 +206,3 @@ Potential misuse is low because the app recommends fictional music, but the same
 This project taught me that a useful AI system is more than a model call. The important work was connecting retrieval, deterministic logic, generation, validation, and testing into one repeatable workflow.
 
 AI collaboration helped most when brainstorming how to structure the system as a RAG pipeline around the original recommender. A flawed suggestion was to rely too much on generated text as proof of quality; the better solution was to add concrete tests and an evaluation harness that can fail when behavior is wrong.
-
-

@@ -7,6 +7,7 @@ import os
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 
@@ -30,7 +31,7 @@ class GeminiClient:
     """
 
     def __init__(self, api_key: Optional[str] = None, timeout_seconds: int = 20):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or _read_env_key()
         self.timeout_seconds = timeout_seconds
 
     @property
@@ -73,3 +74,18 @@ class GeminiClient:
 
         return AIResult(text=text, provider="gemini")
 
+
+def _read_env_key(env_path: str = ".env") -> Optional[str]:
+    """Read GEMINI_API_KEY from a local .env file when the shell has not exported it."""
+    path = Path(env_path)
+    if not path.exists():
+        return None
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        name, value = stripped.split("=", 1)
+        if name.strip() == "GEMINI_API_KEY":
+            return value.strip().strip('"').strip("'") or None
+    return None

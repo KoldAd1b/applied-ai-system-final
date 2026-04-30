@@ -61,10 +61,11 @@ Optional Gemini setup:
 
 ```bash
 cp .env.example .env
-export GEMINI_API_KEY="your_key_here"
+# Edit .env so it contains:
+# GEMINI_API_KEY=your_key_here
 ```
 
-Do not commit `.env` or paste the real key into source code. The app works without Gemini by using the local fallback generator.
+The app automatically reads `GEMINI_API_KEY` from `.env` or from your exported shell environment. Do not commit `.env` or paste the real key into source code. The app works without Gemini by using the local fallback generator.
 
 ## Run The System
 

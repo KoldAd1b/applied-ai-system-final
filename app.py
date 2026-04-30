@@ -23,8 +23,8 @@ EXAMPLE_QUERIES = [
 
 
 def main() -> None:
-    st.set_page_config(page_title="VibeFinder", page_icon="🎧", layout="wide")
-    st.title("VibeFinder")
+    st.set_page_config(page_title="musica", page_icon="🎧", layout="wide")
+    st.title("musica")
     st.caption("RAG music recommendation system with explainable scoring and guardrails")
 
     if "query" not in st.session_state:
@@ -41,7 +41,7 @@ def main() -> None:
         st.divider()
         st.subheader("Examples")
         for query in EXAMPLE_QUERIES:
-            if st.button(query, use_container_width=True):
+            if st.button(query, width="stretch"):
                 st.session_state.query = query
 
         st.divider()
@@ -106,7 +106,7 @@ def render_response(response, show_debug: bool) -> None:
             }
             for item in response.retrieved_items
         ]
-        st.dataframe(evidence_rows, hide_index=True, use_container_width=True)
+        st.dataframe(evidence_rows, hide_index=True, width="stretch")
 
         st.subheader("Agentic Workflow")
         for index, step in enumerate(response.plan_steps, start=1):
@@ -144,7 +144,7 @@ def render_evaluation_panel() -> None:
         )
 
     st.metric("Evaluation Result", f"{passed}/{len(EVAL_CASES)}")
-    st.dataframe(rows, hide_index=True, use_container_width=True)
+    st.dataframe(rows, hide_index=True, width="stretch")
 
 
 if __name__ == "__main__":
